@@ -46,6 +46,7 @@ Siga os passos abaixo para rodar a aplicação em seu ambiente local:
 
 1. **Clone o repositório:**
    ```bash
+      https://github.com/Isabelle-Vicente-Oliveira/Gerenciador-de-Tarefas-API.git
    ```
 
 
