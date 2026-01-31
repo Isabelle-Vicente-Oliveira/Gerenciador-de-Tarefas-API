@@ -1,0 +1,101 @@
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  member
+  admin
+}
+
+enum StatusTask {
+  pending
+  in_progress
+  completed
+}
+
+enum PriorityTask {
+  high
+  medium
+  low
+}
+
+model User {
+  id       String   @id @default(uuid())
+  name     String   @db.VarChar(100)
+  email    String   @unique @db.VarChar(150)
+  password String   @db.VarChar(255)
+  role     UserRole @default(member)
+
+  createAt      DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime?     @updatedAt @map("updated_at")
+  teamMembers   TeamMembers[]
+  tasks         Tasks[]
+  taskHistories TaskHistory[]
+
+  @@map("users")
+}
+
+model Teams {
+  id          String @id @default(uuid())
+  name        String @db.VarChar(100)
+  description String
+
+  createAt    DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime?     @updatedAt @map("updated_at")
+  teamMembers TeamMembers[]
+  tasks       Tasks[]
+
+  @@map("teams")
+}
+
+model TeamMembers {
+  id     String @id @default(uuid())
+  userId String @map("user_id")
+  teamId String @map("team_id")
+
+  user User  @relation(fields: [userId], references: [id])
+  team Teams @relation(fields: [teamId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("team_members")
+}
+
+model Tasks {
+  id          String       @id @default(uuid())
+  title       String       @db.VarChar(200)
+  description String
+  status      StatusTask   @default(pending)
+  priority    PriorityTask @default(low)
+  assignedTo  String       @map("assigned_to")
+  teamId      String       @map("team_id")
+
+  team Teams @relation(fields: [teamId], references: [id])
+  user User  @relation(fields: [assignedTo], references: [id])
+
+  createAt      DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime?     @updatedAt @map("updated_at")
+  taskHistories TaskHistory[]
+
+  @@map("tasks")
+}
+
+model TaskHistory {
+  id        String     @id @default(uuid())
+  taskId    String
+  changedBy String     @map("changed_by")
+  oldStatus StatusTask @map("old_status")
+  newStatus StatusTask @map("new_status")
+  changedAt DateTime?  @updatedAt @map("changed_at")
+
+  task Tasks @relation(fields: [taskId], references: [id])
+  user User  @relation(fields: [changedBy], references: [id])
+
+  @@map("tasks_history")
+}
